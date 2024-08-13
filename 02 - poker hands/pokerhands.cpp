@@ -1,3 +1,15 @@
+/*
+Comando usado para compilar:
+$ g++ pokerhands.cpp -o pokerhands.out -Wall
+
+Entrada:
+2H 3D 5S 9C KD 2C 3H 4S 8C AH
+2H 4S 4C 2D 4H 2S 8S AS QS 3S
+2H 3D 5S 9C KD 2C 3H 4S 8C KH
+2H 3D 5S 9C KD 2D 3H 5C 9S KH
+
+* A resposta é dada a cada iteração
+*/
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -11,6 +23,11 @@ bool sortFunction(string a, string b);
 
 bool isStraight(vector<string> hand);
 bool isFlush(vector<string> hand);
+bool isFourOAK(vector<string> hand);
+bool isFullHouse(vector<string> hand);
+bool isThreeOAK(vector<string> hand);
+bool isPair(vector<string> hand);
+bool isTwoPairs(vector<string> hand);
 
 int main() {
 
@@ -33,6 +50,9 @@ int main() {
         }
 
         checkWinner(blackHand, whiteHand);
+        
+        blackHand.erase(blackHand.begin(), blackHand.end());
+        whiteHand.erase(whiteHand.begin(), whiteHand.end());
     }
 
     return 0;
@@ -58,14 +78,16 @@ void checkWinner(vector<string> blackHand, vector<string> whiteHand) {
 
 int checkHand(vector<string> hand) {
     
-    bool is = isFlush(hand);
-    for (auto h : hand) {
-        cout << h << " ";
-    }
+    if (isStraight(hand) && isFlush(hand)) return 90;
+    if (isFourOAK(hand)) return 80;
+    if (isFullHouse(hand)) return 70;
+    if (isFlush(hand)) return 60;
+    if (isStraight(hand)) return 50;
+    if (isThreeOAK(hand)) return 40;
+    if (isTwoPairs(hand)) return 30;
+    if (isPair(hand)) return 20;
 
-    cout << endl << is << endl;
-
-    return 0;
+    return getValueOrder(hand[4]);
 }
 
 int getValueOrder(string card) {
@@ -100,14 +122,7 @@ bool isStraight(vector<string> hand) {
     int first  = getValueOrder(hand[1]);
     int zero   = getValueOrder(hand[0]);
 
-    cout << zero << " " << first << " " << second << " " <<third << " " <<forth << endl;
-
-    if (    
-        forth  == third  + 1 &&
-        third  == second + 1 &&
-        second == first  + 1 &&
-        first  == zero   + 1
-    ) return true;
+    if (forth == (third + 1) && third == (second + 1) && second == (first + 1) && first == (zero + 1) ) return true;
 
     return false;
 }
@@ -124,3 +139,54 @@ bool isFlush(vector<string> hand) {
     return false;
 }
 
+bool isFourOAK(vector<string> hand) {
+    int forth  = getValueOrder(hand[4]);
+    int first  = getValueOrder(hand[1]);
+    int zero   = getValueOrder(hand[0]);
+
+    if (zero == first || first == forth) return true;
+
+    return false;
+}
+
+bool isFullHouse(vector<string> hand) {
+    return isThreeOAK(hand) && isPair(hand);
+}
+
+bool isThreeOAK(vector<string> hand) {
+    int forth  = getValueOrder(hand[4]);
+    int second = getValueOrder(hand[2]);
+    int zero   = getValueOrder(hand[0]);
+
+    if (zero == second || second == forth) return true;
+
+    return false;
+}
+
+bool isPair(vector<string> hand) {
+    int forth  = getValueOrder(hand[4]);
+    int third  = getValueOrder(hand[3]);
+    int second = getValueOrder(hand[2]);
+    int first  = getValueOrder(hand[1]);
+    int zero   = getValueOrder(hand[0]);
+
+    if (zero == first || first == second || second == third || third == forth) return true;
+
+    return false;
+}
+
+bool isTwoPairs(vector<string> hand) {
+    int pairCount = 0;
+    int forth  = getValueOrder(hand[4]);
+    int third  = getValueOrder(hand[3]);
+    int second = getValueOrder(hand[2]);
+    int first  = getValueOrder(hand[1]);
+    int zero   = getValueOrder(hand[0]);
+
+    if (zero == first) pairCount++;
+    if (first == second) pairCount++;
+    if (second == third) pairCount++;
+    if (third == forth) pairCount++;
+
+    return pairCount > 1;
+}

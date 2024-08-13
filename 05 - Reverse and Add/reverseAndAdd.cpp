@@ -1,4 +1,17 @@
+/*
+Comando usado para compilar:
+$ g++ reverseAndAdd.cpp -o reverseAndAdd.out -Wall
+
+Entrada:
+3
+195
+265
+750
+
+* A resposta é dada a cada iteração
+*/
 #include <iostream>
+#include <cstdint>
 
 using namespace std;
 
@@ -6,20 +19,26 @@ unsigned int reverseNumber(unsigned int number);
 bool checkPalindrome(unsigned int number);
 
 int main() {
-    unsigned int number, reversed, iterations;
-    reversed = iterations = 0;
-    
-    cin >> number;
-    if (number < 10) return 0;
+    unsigned int n, number, reversed, iterations;
 
-    do {
-        reversed = reverseNumber(number);
-        number = number + reversed;
-        iterations++;
-    } while(!checkPalindrome(number) && number < UINT32_MAX && iterations < 1000);
+    cin >> n;
+    if (n <= 0 || n > 100) return 0;
 
-    if (iterations < 1000 && number < UINT32_MAX) {
-        cout << iterations << " " << number << endl;
+    for (unsigned int i = 0; i < n; i++) {
+        reversed = iterations = 0;
+        
+        cin >> number;
+        if (number < 10) return 0;
+
+        do {
+            reversed = reverseNumber(number);
+            number = number + reversed;
+            iterations++;
+        } while(!checkPalindrome(number) && number < UINT32_MAX && iterations < 1000);
+
+        if (iterations < 1000 && number < UINT32_MAX) {
+            cout << iterations << " " << number << endl;
+        }
     }
 
     return 0;
