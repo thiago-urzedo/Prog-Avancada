@@ -1,21 +1,23 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
-void moveTurtleToTop(std::vector<string>&, int);
+void moveTurtleToTop(vector<string>&, int);
 
 int main() {
     int nTests, nTurtles;
-    vector<string> original, desired;
+    vector<string> original, desired, output;
 
     cin >> nTests;
 
     for (int i = 0; i < nTests; i++) {
         cin >> nTurtles;
+        cin.ignore();
         
-        int j, k;
+        int j;
         j = 0;
 
         while (j < nTurtles*2) {
@@ -30,31 +32,38 @@ int main() {
             j++;
         }
 
-        j = k = nTurtles-1;
-        while(j >= 0 && k >= 0) {
-            
-            if (original[j] == desired[k]) {
-                j--;
+        int k = nTurtles-1;
+        string aux;
+        while(k >= 0) {
+            if (original[k].compare(desired[k]) == 0) {
                 k--;
-            } else if (original[j] != desired[k]) {
-                cout << original[j] << endl;
-                moveTurtleToTop(original, j);
+            } else {
+                output.push_back(original[k]);
+                moveTurtleToTop(original, k);
+            }
+        }
+
+        for (int index = nTurtles - 1; index >= 0; index--) {
+            if (find(output.begin(), output.end(), desired[index]) != output.end()) {
+                cout << desired[index] << endl;
             }
         }
 
         cout << endl;
         original.clear();
         desired.clear();
+        output.clear();
     }
 
     return 0;
 }
 
-void moveTurtleToTop(std::vector<string>& arr, int index) {
+void moveTurtleToTop(vector<string>& arr, int index) {
+    string aux = arr[index];
     
-    for (int i = index; i > 0; --i) {
-        arr[i] = arr[i - 1];
+    for (int i = index; i > 0; i--) {
+        arr[i] = arr[i-1];
     }
-    
-    arr[0] = arr[index];
+
+    arr[0] = aux;
 }
