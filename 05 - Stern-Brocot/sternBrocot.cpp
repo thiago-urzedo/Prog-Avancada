@@ -1,39 +1,43 @@
-// Ref: https://github.com/KHvic/uva-online-judge/blob/master/10077-The%20Stern-Brocot%20Number%20System.cpp
-
 #include <iostream>
-#include <utility>
-
+#include <fstream>
+#include <string>
 using namespace std;
 
-int main() {
-    int m, n;
-    pair<int,int> left,right,mid;
+void solve(int n, int m) {
+    int left_n = 0, left_d = 1;
+    int right_n = 1, right_d = 0;
+    int curr_n = 1, curr_d = 1;
 
-    cin >> n >> m;
+    string path;
 
-    while (!(n == 1 && m == 1)) {
-        
-        string out = "";
-        left = {0,1}, right = {1,0}, mid = {1,1};
-
-        while (mid.first != n || mid.second != m) {
-            // avoid floating point calc
-            int v1 = n*mid.second;
-            int v2 = m*mid.first;
-
-            if (v1<v2) { // go left
-                right = mid;
-                mid = {left.first+mid.first, left.second+mid.second};
-                out += 'L';
-            } else { // go right
-                left = mid;
-                mid = {mid.first+right.first, mid.second+right.second};
-                out += 'R';
-            }
+    while (!(curr_n == n && curr_d == m)) {
+        if ((long long)curr_n * m < (long long)n * curr_d) {
+            // Atual é menor que o alvo -> vá para direita
+            path += 'R';
+            left_n = curr_n;
+            left_d = curr_d;
+        } else {
+            // Atual é maior -> vá para esquerda
+            path += 'L';
+            right_n = curr_n;
+            right_d = curr_d;
         }
 
-        cout << out << endl;
-        cin >> n >> m;
+        // novo mediador
+        curr_n = left_n + right_n;
+        curr_d = left_d + right_d;
+    }
+
+    cout << path << endl;
+}
+
+int main() {
+    ifstream infile("input.txt");
+    int n, m;
+
+    while (infile >> n >> m) {
+        if (n == 1 && m == 1) break;
+        solve(n, m);
     }
 
     return 0;
