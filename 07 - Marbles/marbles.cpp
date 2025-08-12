@@ -1,25 +1,34 @@
 // Ref: https://github.com/KHvic/uva-online-judge/blob/master/10090-Marbles.cpp
 
-#include <bits/stdc++.h>
-using namespace std;
-#define ll long long
+#include <iostream>
+#include <cmath>
+#include <fstream>
 
+using namespace std;
+
+#define ll long long
 ll x, y, d;
-void extendedEuclid(ll a, ll b) {
-    if(b==0) { x=1; y=0; d=a; return;}
-    extendedEuclid(b, a%b);
-    ll y1 = x-(a/b)*y;
-    x = y;
-    y = y1;
-}
+
+void extendedEuclid(ll, ll);
 
 int main() {
-    ll v,n1,n2,c1,c2;
-    while(scanf("%lld",&v),v){
-        scanf("%lld %lld %lld %lld",&c1,&n1,&c2,&n2);
+    ifstream input;
+
+    input.open("input.txt");
+    if (!input.is_open()) {
+        cerr << "Erro ao abrir o arquivo" << endl;
+    }
+
+    ll v, n1, n2, c1, c2;
+    
+    input >> v;
+    while(v != 0) {
+        input >> c1 >> n1 >> c2 >> n2;
+        
         extendedEuclid(n1,n2);
+        
         if (v%d != 0) {
-            printf("failed\n");
+            cout << "failed" << endl;
         } else {
             // to get to ax + by = v
             x *= v/d;
@@ -34,19 +43,41 @@ int main() {
             n2 /= d, n1 /= d; // divide first to prevent overflow
             ll lowerbound=ceil(-(double)x/n2);
             ll upperbound=floor((double)y/n1);
+
             if(lowerbound<=upperbound) {
                 // compare cost
                 ll res1 = c1*(x+n2*lowerbound) + c2*(y-n1*lowerbound);
                 ll res2 = c1*(x+n2*upperbound) + c2*(y-n1*upperbound);
+
                 if (res1 < res2) {
-                    printf("%lld %lld\n",(x+n2*lowerbound), (y-n1*lowerbound));
+                    cout << (x+n2*lowerbound) << " " << (y-n1*lowerbound) << endl;
                 } else {
-                    printf("%lld %lld\n",(x+n2*upperbound), (y-n1*upperbound));
+                    cout << (x+n2*upperbound) << " " << (y-n1*upperbound) << endl;
                 }
-            } else
-                printf("failed\n");
+            } else {
+                cout << "failed" << endl;
+            }
         }
+
+        input >> v;
     }
 
+    input.close();
+
     return 0;
+}
+
+void extendedEuclid(ll a, ll b) {
+    if(b==0) {
+        x=1; 
+        y=0; 
+        d=a; 
+        return;
+    }
+
+    extendedEuclid(b, a%b);
+    
+    ll y1 = x-(a/b)*y;
+    x = y;
+    y = y1;
 }
