@@ -1,0 +1,10 @@
+Todas as atividades foram desenvolvidas em C++.
+Os programas lêem as entradas de um arquivo chamado input.txt, cada atividade tem seu próprio arquivo.
+Para compilar e rodar os testes, basta entrar no diretório de alguma atividade e rodar o seguinte comando no terminal:
+
+$ make
+
+Ele irá compilar o código, rodar o executável criado e exluir o executável após a execução. Foram utilizados os seguintes comandos:
+$ g++ NOME_DO_PROBLEMA.cpp -o exec -Wall; ./exec; rm exec
+
+* O makefile foi configurado com os comandos do linux. 
