@@ -1,67 +1,34 @@
 #include <iostream>
-#include <fstream>
+#include <array>
 #include <vector>
-#include <string>
-#include <algorithm>
+#include <queue>
+#include <unordered_set>
+#include <fstream>
+
 using namespace std;
 
-const int center_indices[8] = {6, 7, 8, 11, 12, 15, 16, 17};
-const int move_order[8][7] = {
-    {0, 2, 6, 11, 15, 20, 22},
-    {1, 3, 8, 12, 17, 21, 23},
-    {10, 9, 8, 7, 6, 5, 4},
-    {19, 18, 17, 16, 15, 14, 13},
-    {23, 21, 17, 12, 8, 3, 1},
-    {22, 20, 15, 11, 6, 2, 0},
-    {13, 14, 15, 16, 17, 18, 19},
-    {4, 5, 6, 7, 8, 9, 10}
+struct State {
+    array<int, 24> conf; // configuração do puzzle (24 inteiros)
+    string moves; // sequência de movimentos
 };
 
-string moves = "ABCDEFGH";
+// Array com o estado objetivo final
+array<int,24> FINAL = {
+    0,3,4,3,0,5,6,5,0,1,2,1,
+    0,7,8,7,0,9,10,9,0,1,2,1
+};
 
-vector<int> board(24), temp_board(24);
-string solution;
-bool solved = false;
-
-int cost() {
-    int count[6] = {0}; // cores 1 a 5
-    for (int i : center_indices)
-        count[board[i]]++;
-    return 8 - *max_element(count + 1, count + 6); // cores são de 1 a 5
-}
-
-void rotate(int m) {
-    int tmp[7];
-    for (int i = 0; i < 7; ++i)
-        tmp[i] = board[move_order[m][i]];
-
-    // Rotação: último valor vai para o primeiro
-    for (int i = 0; i < 7; ++i)
-        board[move_order[m][i]] = tmp[(i + 1) % 7];
-}
-
-bool dfs(int depth, int max_depth, string path) {
-    if (cost() == 0) {
-        solution = path;
-        solved = true;
-        return true;
-    }
-
-    if (depth + cost() > max_depth) return false;
-
-    vector<int> snapshot = board;
-
-    for (int i = 0; i < 8; ++i) {
-        rotate(i);
-        if (dfs(depth + 1, max_depth, path + moves[i])) return true;
-        board = snapshot; // desfaz rotação
-    }
-    return false;
-}
+array<int,24> rotateLeftCW(const array<int,24>& s);
+array<int,24> rotateLeftCCW(const array<int,24>& s);
+array<int,24> rotateRightCW(const array<int,24>& s);
+array<int,24> rotateRightCCW(const array<int,24>& s);
+bool isFinal(const array<int,24>& s);
+string bfs(array<int,24> start);
 
 int main() {
     ifstream input;
 
+    // Se não encontrar o arquivo de entrada, o programa termina
     input.open("input.txt");
     if (!input.is_open()) {
         cerr << "Erro ao abrir o arquivo" << endl;
@@ -70,25 +37,95 @@ int main() {
     int n;
     input >> n;
 
-    for(int i = 0; i < n; i++) {
-        board.clear();
-        board.resize(24);
+    for (int i = 0; i < n; i++) {
+        array<int, 24> conf;
 
-        for (int i = 0; i < 24; ++i) {
-            input >> board[i];
-        }
+        for (int k = 0; k < 24; k++) {
+            input >> conf[k];
+        } 
 
-        solved = false;
-        solution.clear();
-
-        for (int depth = 0; depth <= 10; ++depth) {
-            if (dfs(0, depth, "")) break;
-        }
-
-        if (solved)
-            cout << solution << endl;
-        else
-            cout << "NO SOLUTION WAS FOUND IN 10 STEPS" << endl;
+        cout << bfs(conf) << "\n";
     }
+
     return 0;
+}
+
+// Rotação da esquerda (horário)
+array<int,24> rotateLeftCW(const array<int,24>& s) {
+    array<int,24> t = s;
+    for (int i=0;i<12;i++) t[i] = s[(i+11)%12]; // shift no sentido horário
+    for (int i=12;i<24;i++) t[i] = s[i];       // direita fica igual
+    return t;
+}
+
+// Rotação da esquerda (anti-horário)
+array<int,24> rotateLeftCCW(const array<int,24>& s) {
+    array<int,24> t = s;
+    for (int i=0;i<12;i++) t[i] = s[(i+1)%12]; // shift no sentido anti-horário
+    for (int i=12;i<24;i++) t[i] = s[i];
+    return t;
+}
+
+// Rotação da direita (horário)
+array<int,24> rotateRightCW(const array<int,24>& s) {
+    array<int,24> t = s;
+    for (int i=12;i<24;i++) t[i] = s[(i-1<12?23:i-1)]; // shift no sentido horário
+    for (int i=0;i<12;i++) t[i] = s[i];
+    return t;
+}
+
+// Rotação da direita (anti-horário)
+array<int,24> rotateRightCCW(const array<int,24>& s) {
+    array<int,24> t = s;
+    for (int i=12;i<24;i++) t[i] = s[(i+1>23?12:i+1)]; // shift no sentido anti-horário
+    for (int i=0;i<12;i++) t[i] = s[i];
+    return t;
+}
+
+// Verifica se o estado atual é igual ao estado final
+bool isFinal(const array<int,24>& s) {
+    return s == FINAL;
+}
+
+// Função da BFS (Busca em largura)
+string bfs(array<int,24> start) {
+    if (isFinal(start)) return "PUZZLE ALREADY SOLVED";
+
+    queue<State> q;
+    unordered_set<string> visited;
+
+    // compacta o vetor em uma string
+    auto toStr = [](const array<int,24>& s) {
+        string r;
+        for (int x : s) r += (char)(x + 'A');
+        return r;
+    };
+
+    string startStr = toStr(start);
+    visited.insert(startStr);
+    q.push({start, ""});
+
+    while (!q.empty()) {
+        auto cur = q.front(); q.pop();
+
+        if (cur.moves.size() >= 16) continue;
+
+        vector<pair<array<int,24>,char>> nexts;
+        nexts.push_back({rotateLeftCW(cur.conf),'1'});
+        nexts.push_back({rotateRightCW(cur.conf),'2'});
+        nexts.push_back({rotateLeftCCW(cur.conf),'3'});
+        nexts.push_back({rotateRightCCW(cur.conf),'4'});
+
+        for (auto &nx : nexts) {
+            auto st = nx.first;
+            string code = toStr(st);
+            if (visited.count(code)) continue;
+            visited.insert(code);
+            string nm = cur.moves + nx.second;
+            if (isFinal(st)) return nm;
+            q.push({st, nm});
+        }
+    }
+    
+    return "NO SOLUTION WAS FOUND IN 16 STEPS";
 }
