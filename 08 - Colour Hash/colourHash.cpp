@@ -47,6 +47,8 @@ int main() {
         cout << bfs(conf) << "\n";
     }
 
+    input.close();
+
     return 0;
 }
 

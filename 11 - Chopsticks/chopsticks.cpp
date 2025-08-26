@@ -1,39 +1,69 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <climits>
+#include <fstream>
+
 using namespace std;
 
-const int INF = 1e9+7;
+const int INF = INT_MAX;
 
 int main() {
-    int k, n;
-    cin >> k >> n;
-    vector<int> L(n + 1); // 1-based indexing
+    ifstream input;
 
-    for (int i = 1; i <= n; ++i)
-        cin >> L[i];
-
-    // Ordenar os hashis do menor para o maior
-    sort(L.begin() + 1, L.end());
-
-    // dp[i][j] = menor custo para formar j pares com os primeiros i hashis
-    vector<vector<int>> dp(n + 1, vector<int>(k + 1, INF));
-
-    // Nenhum par com 0 hashis ⇒ custo zero
-    for (int i = 0; i <= n; ++i)
-        dp[i][0] = 0;
-
-    // Preenche a tabela
-    for (int i = 2; i <= n; ++i) {
-        for (int j = 1; j <= k; ++j) {
-            // Caso 1: ignora o i-ésimo hashi
-            dp[i][j] = dp[i - 1][j];
-
-            // Caso 2: usa os hashis i e i-1 para formar um par
-            int diff = L[i] - L[i - 1];
-            if (i >= 2 && dp[i - 2][j - 1] != INF)
-                dp[i][j] = min(dp[i][j], dp[i - 2][j - 1] + diff * diff);
-        }
+    // Se não encontrar o arquivo de entrada, o programa termina
+    input.open("input.txt");
+    if (!input.is_open()) {
+        cerr << "Erro ao abrir o arquivo" << endl;
     }
 
-    cout << dp[n][k] << endl;
+    // Número de casos de testes
+    int T;
+    input >> T;
+
+    while (T--) {
+        int K, N;
+        input >> K >> N;
+        K += 8;
+        vector<int> L(N+1);
+
+        // Lê as entradas
+        for (int i = 1; i <= N; i++) {
+            input >> L[i];
+        }
+
+        // Inicializa a tabela dp (programação dinâmica) de dimensões [N+2][K+1]
+        vector<vector<int>> dp(N+2, vector<int>(K+1, INF));
+        for (int i = 0; i <= N+1; i++) {
+            dp[i][0] = 0;
+        }
+
+        for (int i = N; i >= 1; i--) {
+            for (int j = 1; j <= K; j++) {
+                // Quando não ha chopsticks suficientes para formar j conjuntos
+                if (3*j > (N - i + 1)) {
+                    continue;
+                }
+
+                // Não usar o chopstick i
+                dp[i][j] = dp[i+1][j];
+
+                // User os chopsticks i and i+1 como chopsticks curtos
+                // e um i+2 para N, como longo
+                if (i+2 <= N+1) {
+                    int cost = (L[i+1] - L[i]) * (L[i+1] - L[i]);
+                    
+                    if (dp[i+2][j-1] != INF) {
+                        dp[i][j] = min(dp[i][j], dp[i+2][j-1] + cost);
+                    }
+                }
+            }
+        }
+
+        cout << dp[1][K] << endl;
+    }
+
+    input.close();
+
     return 0;
 }
